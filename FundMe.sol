@@ -12,7 +12,7 @@ contract FundMe {
 
     using PriceConverter for uint256;
 
-    uint256 public minimumUsd = 50 * 1e18; // 1 * 10 ** 18
+    uint256 public constant MINIMUM_USD = 50 * 1e18; // 1 * 10 ** 18
 
     // track the funders who sent us money
     // create an array of addresses called funders
@@ -21,17 +21,17 @@ contract FundMe {
     mapping(address => uint256) public addressToAmountFunded;
 
     // set up an address to store the information of the contract owner
-    address public owner;
+    address public immutable i_owner;
 
     constructor(){
-        owner = msg.sender;
+        i_owner = msg.sender;
     }
 
     function fund() public payable {
         // Want to be able to set a minimum fund amount in USD
         // 1. How do we send ETH to this contract?
         
-        require(msg.value.getConversionRate() >= minimumUsd, "Didn't send enough!"); // 1e18 == 1 * 10 * 18 == 1000000000000000000
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "Didn't send enough!"); // 1e18 == 1 * 10 * 18 == 1000000000000000000
         // 18 decimals
         funders.push(msg.sender);
 
@@ -74,9 +74,20 @@ contract FundMe {
 
     // make sure that only the owner of this contract can call the withdraw function
     modifier onlyOwner {
-        require(msg.sender == owner, "Sender is not owner!");
+        require(msg.sender == i_owner, "Sender is not owner!");
         _; // This represents the rest of the code in that function
     }
+
+
+    // What happens is someone sends this contract ETH without calling the fund function?
+    
+    receive() external payable {
+        fund();
+    }
+    fallback() external payable {
+        fund();
+    }
+
 
 
 }
