@@ -20,6 +20,12 @@ contract FundMe {
 
     mapping(address => uint256) public addressToAmountFunded;
 
+    // set up an address to store the information of the contract owner
+    address public owner;
+
+    constructor(){
+        owner = msg.sender;
+    }
 
     function fund() public payable {
         // Want to be able to set a minimum fund amount in USD
@@ -36,7 +42,7 @@ contract FundMe {
     
 
     // funderIndex++ equals funderIndex = funderIndex + 1
-    function withdraw() public {
+    function withdraw() public onlyOwner {
         // for loop
         /* starting index, ending index, step amount */
         for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
@@ -45,7 +51,6 @@ contract FundMe {
             addressToAmountFunded[funder] = 0; // reset the address of that funder back to 0
 
         }
-
         // reset the funders array to a blank array
         funders = new address[](0);
         // actually withdraw the funds: three different ways to do this:
@@ -64,5 +69,14 @@ contract FundMe {
         // call
         (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
         require (callSuccess, "Call failed");
+
     }
+
+    // make sure that only the owner of this contract can call the withdraw function
+    modifier onlyOwner {
+        require(msg.sender == owner, "Sender is not owner!");
+        _; // This represents the rest of the code in that function
+    }
+
+
 }
